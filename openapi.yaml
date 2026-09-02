@@ -11,10 +11,8 @@ info:
     email: bambang@example.com
 
 servers:
-  - url: https://penjualan-api.vercel.app/api
+  - url: https://open-api-prakwebservice.vercel.app/api
     description: Production (Vercel)
-  - url: https://penjualan-api.onrender.com/api
-    description: Production (Render)
   - url: http://localhost:3000/api
     description: Local development
 
