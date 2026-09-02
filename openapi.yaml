@@ -314,7 +314,11 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: Transaksi, pelanggan_id, atau produk_id yang dirujuk tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
       tags: [Penjualan]
       summary: Hapus transaksi penjualan
