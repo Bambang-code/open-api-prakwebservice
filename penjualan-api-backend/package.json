@@ -1,0 +1,9 @@
+{
+  "name": "penjualan-api",
+  "version": "1.0.0",
+  "description": "Backend REST API untuk data pelanggan, produk, dan penjualan (Neon Postgres), deploy di Vercel",
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.5"
+  }
+}

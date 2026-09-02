@@ -1,0 +1,526 @@
+openapi: 3.0.3
+info:
+  title: Penjualan API
+  description: >
+    API untuk mengelola data pelanggan, produk, dan transaksi penjualan.
+    Dirancang secara contract-first berdasarkan skema database yang sudah
+    dibuat di Neon (tabel `pelanggan`, `produk`, `penjualan`).
+  version: 1.0.0
+  contact:
+    name: Bambang
+    email: bambang@example.com
+
+servers:
+  - url: https://penjualan-api.vercel.app/api
+    description: Production (Vercel)
+  - url: https://penjualan-api.onrender.com/api
+    description: Production (Render)
+  - url: http://localhost:3000/api
+    description: Local development
+
+tags:
+  - name: Pelanggan
+    description: Operasi pada data pelanggan
+  - name: Produk
+    description: Operasi pada data produk
+  - name: Penjualan
+    description: Operasi pada data transaksi penjualan
+
+paths:
+  # ==========================================================
+  # PELANGGAN
+  # ==========================================================
+  /pelanggan:
+    get:
+      tags: [Pelanggan]
+      summary: Ambil daftar pelanggan
+      description: Mengembalikan seluruh data pelanggan. Bisa difilter berdasarkan kota.
+      parameters:
+        - name: kota
+          in: query
+          description: Filter pelanggan berdasarkan kota
+          required: false
+          schema:
+            type: string
+          example: Surabaya
+      responses:
+        '200':
+          description: Berhasil mengambil daftar pelanggan
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pelanggan'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      tags: [Pelanggan]
+      summary: Tambah pelanggan baru
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PelangganInput'
+      responses:
+        '201':
+          description: Pelanggan berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pelanggan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /pelanggan/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PelangganId'
+    get:
+      tags: [Pelanggan]
+      summary: Ambil detail satu pelanggan
+      responses:
+        '200':
+          description: Berhasil mengambil detail pelanggan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pelanggan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Pelanggan]
+      summary: Perbarui data pelanggan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PelangganInput'
+      responses:
+        '200':
+          description: Pelanggan berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pelanggan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Pelanggan]
+      summary: Hapus pelanggan
+      responses:
+        '204':
+          description: Pelanggan berhasil dihapus
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==========================================================
+  # PRODUK
+  # ==========================================================
+  /produk:
+    get:
+      tags: [Produk]
+      summary: Ambil daftar produk
+      description: Mengembalikan seluruh data produk. Bisa difilter berdasarkan kategori.
+      parameters:
+        - name: kategori
+          in: query
+          description: Filter produk berdasarkan kategori
+          required: false
+          schema:
+            type: string
+          example: Minuman
+      responses:
+        '200':
+          description: Berhasil mengambil daftar produk
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Produk'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      tags: [Produk]
+      summary: Tambah produk baru
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProdukInput'
+      responses:
+        '201':
+          description: Produk berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /produk/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ProdukId'
+    get:
+      tags: [Produk]
+      summary: Ambil detail satu produk
+      responses:
+        '200':
+          description: Berhasil mengambil detail produk
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produk'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Produk]
+      summary: Perbarui data produk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProdukInput'
+      responses:
+        '200':
+          description: Produk berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Produk]
+      summary: Hapus produk
+      responses:
+        '204':
+          description: Produk berhasil dihapus
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==========================================================
+  # PENJUALAN
+  # ==========================================================
+  /penjualan:
+    get:
+      tags: [Penjualan]
+      summary: Ambil daftar transaksi penjualan
+      description: Mengembalikan seluruh data penjualan. Bisa difilter berdasarkan pelanggan, produk, atau rentang tanggal.
+      parameters:
+        - name: pelanggan_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: produk_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: tanggal_mulai
+          in: query
+          description: Filter tanggal awal (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: tanggal_akhir
+          in: query
+          description: Filter tanggal akhir (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Berhasil mengambil daftar penjualan
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Penjualan'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      tags: [Penjualan]
+      summary: Catat transaksi penjualan baru
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PenjualanInput'
+      responses:
+        '201':
+          description: Transaksi penjualan berhasil dicatat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Penjualan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: pelanggan_id atau produk_id yang dirujuk tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /penjualan/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PenjualanId'
+    get:
+      tags: [Penjualan]
+      summary: Ambil detail satu transaksi penjualan
+      responses:
+        '200':
+          description: Berhasil mengambil detail transaksi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Penjualan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Penjualan]
+      summary: Perbarui transaksi penjualan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PenjualanInput'
+      responses:
+        '200':
+          description: Transaksi berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Penjualan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Penjualan]
+      summary: Hapus transaksi penjualan
+      responses:
+        '204':
+          description: Transaksi berhasil dihapus
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    PelangganId:
+      name: id
+      in: path
+      required: true
+      description: ID pelanggan
+      schema:
+        type: integer
+      example: 1
+    ProdukId:
+      name: id
+      in: path
+      required: true
+      description: ID produk
+      schema:
+        type: integer
+      example: 1
+    PenjualanId:
+      name: id
+      in: path
+      required: true
+      description: ID transaksi penjualan
+      schema:
+        type: integer
+      example: 1
+
+  schemas:
+    Pelanggan:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        nama:
+          type: string
+          example: Budi Santoso
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: budi.santoso@email.com
+        no_telepon:
+          type: string
+          nullable: true
+          example: '081234567801'
+        kota:
+          type: string
+          nullable: true
+          example: Surabaya
+      required: [id, nama]
+
+    PelangganInput:
+      type: object
+      properties:
+        nama:
+          type: string
+          example: Budi Santoso
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: budi.santoso@email.com
+        no_telepon:
+          type: string
+          nullable: true
+          example: '081234567801'
+        kota:
+          type: string
+          nullable: true
+          example: Surabaya
+      required: [nama]
+
+    Produk:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        nama_produk:
+          type: string
+          example: Kopi Susu
+        kategori:
+          type: string
+          nullable: true
+          example: Minuman
+        harga:
+          type: number
+          format: double
+          example: 18000
+        stok:
+          type: integer
+          default: 0
+          example: 100
+      required: [id, nama_produk, harga]
+
+    ProdukInput:
+      type: object
+      properties:
+        nama_produk:
+          type: string
+          example: Kopi Susu
+        kategori:
+          type: string
+          nullable: true
+          example: Minuman
+        harga:
+          type: number
+          format: double
+          example: 18000
+        stok:
+          type: integer
+          default: 0
+          example: 100
+      required: [nama_produk, harga]
+
+    Penjualan:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        pelanggan_id:
+          type: integer
+          example: 1
+        produk_id:
+          type: integer
+          example: 1
+        jumlah:
+          type: integer
+          example: 3
+        tanggal:
+          type: string
+          format: date
+          example: '2026-08-01'
+        total:
+          type: number
+          format: double
+          example: 54000
+      required: [id, pelanggan_id, produk_id, jumlah]
+
+    PenjualanInput:
+      type: object
+      properties:
+        pelanggan_id:
+          type: integer
+          example: 1
+        produk_id:
+          type: integer
+          example: 1
+        jumlah:
+          type: integer
+          example: 3
+        tanggal:
+          type: string
+          format: date
+          description: Opsional — default ke tanggal hari ini jika tidak diisi
+          example: '2026-08-01'
+        total:
+          type: number
+          format: double
+          description: Opsional — bisa dihitung otomatis di server dari harga x jumlah
+          example: 54000
+      required: [pelanggan_id, produk_id, jumlah]
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: Data tidak ditemukan
+      required: [code, message]
+
+  responses:
+    BadRequest:
+      description: Permintaan tidak valid (field wajib kosong atau format salah)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Data tidak ditemukan
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServerError:
+      description: Terjadi kesalahan pada server
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
