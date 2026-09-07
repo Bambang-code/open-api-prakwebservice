@@ -5,7 +5,15 @@ info:
     API untuk mengelola data pelanggan, produk, dan transaksi penjualan.
     Dirancang secara contract-first berdasarkan skema database yang sudah
     dibuat di Neon (tabel `pelanggan`, `produk`, `penjualan`).
-  version: 1.0.0
+
+
+    **Kematangan REST (Richardson Maturity Model):** resource `penjualan`
+    dan `produk` sudah berada di **Level 3 (HATEOAS)** karena punya state
+    yang bertransisi (status transaksi; stok produk) — setiap response
+    menyertakan array `links` berisi aksi yang valid dari state saat itu.
+    Resource `pelanggan` sengaja tetap di **Level 2**: hanya data statis
+    tanpa transisi state, sehingga HATEOAS tidak menambah nilai di sana.
+  version: 1.1.0
   contact:
     name: Bambang
     email: bambang@example.com
@@ -25,9 +33,6 @@ tags:
     description: Operasi pada data transaksi penjualan
 
 paths:
-  # ==========================================================
-  # PELANGGAN
-  # ==========================================================
   /pelanggan:
     get:
       tags: [Pelanggan]
@@ -117,9 +122,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  # ==========================================================
-  # PRODUK
-  # ==========================================================
   /produk:
     get:
       tags: [Produk]
@@ -209,14 +211,51 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  # ==========================================================
-  # PENJUALAN
-  # ==========================================================
+  /produk/{id}/restock:
+    parameters:
+      - $ref: '#/components/parameters/ProdukId'
+    post:
+      tags: [Produk]
+      summary: Tambah stok produk (aksi RMM Level 3)
+      description: >
+        Menambah stok produk sebanyak `tambah`. Link `restock` hanya muncul di
+        response produk (field `links`) ketika `stok` produk tersebut 0 — lihat
+        `produkLinks()` di `lib/links.js`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tambah:
+                  type: integer
+                  description: Jumlah stok yang ditambahkan, harus > 0
+                  example: 20
+              required: [tambah]
+      responses:
+        '200':
+          description: Stok berhasil ditambahkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produk'
+        '400':
+          description: Field "tambah" tidak diisi atau <= 0
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
   /penjualan:
     get:
       tags: [Penjualan]
       summary: Ambil daftar transaksi penjualan
-      description: Mengembalikan seluruh data penjualan. Bisa difilter berdasarkan pelanggan, produk, atau rentang tanggal.
+      description: Mengembalikan seluruh data penjualan. Bisa difilter berdasarkan pelanggan, produk, status, atau rentang tanggal.
       parameters:
         - name: pelanggan_id
           in: query
@@ -228,6 +267,12 @@ paths:
           required: false
           schema:
             type: integer
+        - name: status
+          in: query
+          description: Filter berdasarkan status transaksi
+          required: false
+          schema:
+            $ref: '#/components/schemas/PenjualanStatus'
         - name: tanggal_mulai
           in: query
           description: Filter tanggal awal (YYYY-MM-DD)
@@ -328,6 +373,63 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /penjualan/{id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/PenjualanId'
+    post:
+      tags: [Penjualan]
+      summary: Setujui transaksi (pending -> disetujui)
+      description: Link `approve` hanya muncul di response saat status transaksi masih `pending`.
+      responses:
+        '200':
+          description: Transaksi berhasil disetujui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Penjualan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /penjualan/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PenjualanId'
+    post:
+      tags: [Penjualan]
+      summary: Batalkan transaksi (pending|disetujui -> dibatalkan)
+      description: Link `cancel` hanya muncul di response saat status transaksi `pending` atau `disetujui`.
+      responses:
+        '200':
+          description: Transaksi berhasil dibatalkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Penjualan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /penjualan/{id}/kirim:
+    parameters:
+      - $ref: '#/components/parameters/PenjualanId'
+    post:
+      tags: [Penjualan]
+      summary: Kirim transaksi (disetujui -> dikirim)
+      description: Link `kirim` hanya muncul di response saat status transaksi `disetujui`.
+      responses:
+        '200':
+          description: Transaksi berhasil ditandai terkirim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Penjualan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
 components:
   parameters:
     PelangganId:
@@ -356,6 +458,24 @@ components:
       example: 1
 
   schemas:
+    Link:
+      type: object
+      description: Satu HATEOAS link (gaya PayPal — rel/href/method).
+      properties:
+        rel:
+          type: string
+          description: Nama aksi/relasi
+          example: approve
+        href:
+          type: string
+          description: URL tujuan (relatif atau absolut, tergantung endpoint)
+          example: /api/penjualan/42/approve
+        method:
+          type: string
+          description: HTTP method yang harus dipakai untuk memanggil href ini
+          example: POST
+      required: [rel, href, method]
+
     Pelanggan:
       type: object
       properties:
@@ -424,6 +544,19 @@ components:
           type: integer
           default: 0
           example: 100
+        links:
+          type: array
+          description: >
+            HATEOAS links (RMM Level 3). Berisi `restock` kalau stok = 0, atau
+            `beli` kalau stok > 0. Hanya muncul di response GET/PUT
+            `/produk/{id}` dan `POST /produk/{id}/restock` — belum ada di
+            list `GET /produk` maupun `POST /produk`.
+          items:
+            $ref: '#/components/schemas/Link'
+          example:
+            - { rel: self, href: /api/produk/1, method: GET }
+            - { rel: restock, href: /api/produk/1/restock, method: POST }
+            - { rel: swagger, href: /openapi.yaml, method: GET }
       required: [id, nama_produk, harga]
 
     ProdukInput:
@@ -470,7 +603,37 @@ components:
           type: number
           format: double
           example: 54000
-      required: [id, pelanggan_id, produk_id, jumlah]
+        status:
+          allOf:
+            - $ref: '#/components/schemas/PenjualanStatus'
+          readOnly: true
+        links:
+          type: array
+          description: >
+            HATEOAS links (RMM Level 3), menyesuaikan `status` saat ini —
+            lihat `penjualanLinks()` di `lib/links.js`. Response detail
+            (GET/POST/PUT `/penjualan/{id}` dan endpoint aksi) berisi link
+            kontekstual lengkap (`approve`/`cancel`/`kirim` sesuai status,
+            plus `pelanggan`, `produk`, `swagger`); response list
+            (`GET /penjualan`) hanya berisi `self`.
+          items:
+            $ref: '#/components/schemas/Link'
+          example:
+            - { rel: self, href: /api/penjualan/42, method: GET }
+            - { rel: pelanggan, href: /api/pelanggan/1, method: GET }
+            - { rel: produk, href: /api/produk/1, method: GET }
+            - { rel: approve, href: /api/penjualan/42/approve, method: POST }
+            - { rel: cancel, href: /api/penjualan/42/cancel, method: POST }
+            - { rel: swagger, href: /openapi.yaml, method: GET }
+      required: [id, pelanggan_id, produk_id, jumlah, status]
+
+    PenjualanStatus:
+      type: string
+      description: >
+        State transaksi. Transisi hanya lewat endpoint aksi
+        (`/approve`, `/cancel`, `/kirim`), tidak lewat PUT.
+      enum: [pending, disetujui, dikirim, dibatalkan]
+      example: pending
 
     PenjualanInput:
       type: object
@@ -522,6 +685,14 @@ components:
             $ref: '#/components/schemas/Error'
     ServerError:
       description: Terjadi kesalahan pada server
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: >
+        Aksi tidak valid untuk status transaksi saat ini (mis. approve
+        transaksi yang sudah dikirim)
       content:
         application/json:
           schema:
