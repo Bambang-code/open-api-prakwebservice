@@ -1,0 +1,2212 @@
+{
+  "info": {
+    "_postman_id": "ae21a737-2860-451c-8a31-aa0029d0441b",
+    "name": "Level 3 HATEOAS - Penjualan API (Sesi 04)",
+    "description": "Collection untuk membuktikan API penjualan & produk sudah RMM Level 3: bukan cuma status code dan data yang dicek, tapi juga bahwa array `links` di response BERUBAH mengikuti state resource (mis. link `approve` hilang setelah status jadi `disetujui`). Jalankan lewat Collection Runner secara berurutan dari folder 0 sampai 4, atau via Newman: npx newman run level3-hateoas-postman-collection.json --env-var base_url=https://open-api-prakwebservice.vercel.app",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48307750",
+    "_collection_link": "https://go.postman.co/collection/48307750-ae21a737-2860-451c-8a31-aa0029d0441b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "0. Setup Data Uji",
+      "item": [
+        {
+          "name": "0.1 Buat Pelanggan Uji",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Response punya id', function () { pm.expect(data.id).to.exist; });",
+                  "pm.collectionVariables.set('pelanggan_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nama\":\"Test HATEOAS\",\"email\":\"test@hateoas.dev\",\"no_telepon\":\"08123456789\",\"kota\":\"Surabaya\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pelanggan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pelanggan"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "0.1 Buat Pelanggan Uji",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"nama\":\"Test HATEOAS\",\"email\":\"test@hateoas.dev\",\"no_telepon\":\"08123456789\",\"kota\":\"Surabaya\"}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/pelanggan",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "pelanggan"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 201
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 09:56:48 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"67-Xa2iqjoDV/h4GV/LAEwQ5vcKxBo\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::nrj6w-1788775006706-91a6bdfb93e2"
+                },
+                {
+                  "key": "content-length",
+                  "value": "103"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 12,\n    \"nama\": \"Test HATEOAS\",\n    \"email\": \"test@hateoas.dev\",\n    \"no_telepon\": \"08123456789\",\n    \"kota\": \"Surabaya\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "0.2 Buat Produk Uji (stok tersedia)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.collectionVariables.set('produk_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nama_produk\":\"Produk Test Level3\",\"kategori\":\"Test\",\"harga\":10000,\"stok\":5}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/produk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "produk"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "0.2 Buat Produk Uji (stok tersedia)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"nama_produk\":\"Produk Test Level3\",\"kategori\":\"Test\",\"harga\":10000,\"stok\":5}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/produk",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "produk"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 201
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:02:09 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"55-CZnjhe6uAA6JZmOgZ6g0031vKfI\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::gppxj-1788775327718-532fffbc23f1"
+                },
+                {
+                  "key": "content-length",
+                  "value": "85"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 12,\n    \"nama_produk\": \"Produk Test Level3\",\n    \"kategori\": \"Test\",\n    \"harga\": 10000,\n    \"stok\": 5\n}"
+            }
+          ]
+        },
+        {
+          "name": "0.3 Buat Produk Uji (stok habis, untuk tes restock)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.collectionVariables.set('produk_habis_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nama_produk\":\"Produk Habis Level3\",\"kategori\":\"Test\",\"harga\":15000,\"stok\":0}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/produk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "produk"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "0.3 Buat Produk Uji (stok habis, untuk tes restock)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"nama_produk\":\"Produk Habis Level3\",\"kategori\":\"Test\",\"harga\":15000,\"stok\":0}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/produk",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "produk"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 201
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:02:16 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"56-CAtg/Me5KAsvZFcWVXAQkIMj/VM\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::h9q4l-1788775336659-c3af9f454bd1"
+                },
+                {
+                  "key": "content-length",
+                  "value": "86"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 13,\n    \"nama_produk\": \"Produk Habis Level3\",\n    \"kategori\": \"Test\",\n    \"harga\": 15000,\n    \"stok\": 0\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Penjualan - Alur pending -> disetujui -> dikirim",
+      "item": [
+        {
+          "name": "1.1 Buat Transaksi Baru (harus status pending, link approve+cancel muncul)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Status transaksi = pending', function () { pm.expect(data.status).to.eql('pending'); });",
+                  "pm.test('Response punya array links minimal 2', function () { pm.expect(data.links).to.be.an('array'); pm.expect(data.links.length).to.be.at.least(2); });",
+                  "var rels = data.links.map(function (l) { return l.rel; });",
+                  "pm.test('Link approve tersedia (status pending)', function () { pm.expect(rels).to.include('approve'); });",
+                  "pm.test('Link cancel tersedia (status pending)', function () { pm.expect(rels).to.include('cancel'); });",
+                  "pm.test('Link kirim BELUM tersedia (belum disetujui)', function () { pm.expect(rels).to.not.include('kirim'); });",
+                  "pm.collectionVariables.set('penjualan_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"pelanggan_id\": {{pelanggan_id}}, \"produk_id\": {{produk_id}}, \"jumlah\": 2}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/penjualan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "1.1 Buat Transaksi Baru (harus status pending, link approve+cancel muncul)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"pelanggan_id\": {{pelanggan_id}}, \"produk_id\": {{produk_id}}, \"jumlah\": 2}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 201
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:02:26 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"21e-RbI+nko/3GIemkc/Uob7Q+/zmc4\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::8p2db-1788775345431-23a462189048"
+                },
+                {
+                  "key": "content-length",
+                  "value": "542"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 12,\n    \"pelanggan_id\": 12,\n    \"produk_id\": 12,\n    \"jumlah\": 2,\n    \"tanggal\": \"2026-09-07T00:00:00.000Z\",\n    \"total\": 20000,\n    \"status\": \"pending\",\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/penjualan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"pelanggan\",\n            \"href\": \"/api/pelanggan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"produk\",\n            \"href\": \"/api/produk/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"approve\",\n            \"href\": \"/api/penjualan/12/approve\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"cancel\",\n            \"href\": \"/api/penjualan/12/cancel\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "1.2 GET Detail Transaksi (verifikasi ulang link masih sama)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "var rels = data.links.map(function (l) { return l.rel; });",
+                  "pm.test('Link self, pelanggan, produk, swagger ada', function () {",
+                  "  pm.expect(rels).to.include.members(['self', 'pelanggan', 'produk', 'swagger']);",
+                  "});",
+                  "pm.test('href pelanggan mengarah ke pelanggan_id yang benar', function () {",
+                  "  pm.expect(data.links.find(function(l){return l.rel==='pelanggan';}).href).to.eql('/api/pelanggan/' + pm.collectionVariables.get('pelanggan_id'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "{{penjualan_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "1.2 GET Detail Transaksi (verifikasi ulang link masih sama)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "{{penjualan_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "age",
+                  "value": "0"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:02:32 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"21e-RbI+nko/3GIemkc/Uob7Q+/zmc4\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::lnm7v-1788775352031-5840d7a96685"
+                },
+                {
+                  "key": "content-length",
+                  "value": "542"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 12,\n    \"pelanggan_id\": 12,\n    \"produk_id\": 12,\n    \"jumlah\": 2,\n    \"tanggal\": \"2026-09-07T00:00:00.000Z\",\n    \"total\": 20000,\n    \"status\": \"pending\",\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/penjualan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"pelanggan\",\n            \"href\": \"/api/pelanggan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"produk\",\n            \"href\": \"/api/produk/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"approve\",\n            \"href\": \"/api/penjualan/12/approve\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"cancel\",\n            \"href\": \"/api/penjualan/12/cancel\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "1.3 Approve Transaksi (pending -> disetujui)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Status transaksi = disetujui', function () { pm.expect(data.status).to.eql('disetujui'); });",
+                  "var rels = data.links.map(function (l) { return l.rel; });",
+                  "pm.test('Link approve SUDAH HILANG (tidak bisa approve dua kali)', function () { pm.expect(rels).to.not.include('approve'); });",
+                  "pm.test('Link cancel masih ada', function () { pm.expect(rels).to.include('cancel'); });",
+                  "pm.test('Link kirim SEKARANG muncul', function () { pm.expect(rels).to.include('kirim'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "{{penjualan_id}}",
+                "approve"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "1.3 Approve Transaksi (pending -> disetujui)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}/approve",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "{{penjualan_id}}",
+                    "approve"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:02:39 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"21c-HUscJI2O/Bh/xCGOPHX81VLrAiA\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::h5wgs-1788775359229-3f18f59a0c4f"
+                },
+                {
+                  "key": "content-length",
+                  "value": "540"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 12,\n    \"pelanggan_id\": 12,\n    \"produk_id\": 12,\n    \"jumlah\": 2,\n    \"tanggal\": \"2026-09-07T00:00:00.000Z\",\n    \"total\": 20000,\n    \"status\": \"disetujui\",\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/penjualan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"pelanggan\",\n            \"href\": \"/api/pelanggan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"produk\",\n            \"href\": \"/api/produk/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"cancel\",\n            \"href\": \"/api/penjualan/12/cancel\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"kirim\",\n            \"href\": \"/api/penjualan/12/kirim\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "1.4 [Negatif] Approve Lagi Transaksi yang Sudah Disetujui",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409 Conflict (transisi tidak valid)', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "{{penjualan_id}}",
+                "approve"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "1.4 [Negatif] Approve Lagi Transaksi yang Sudah Disetujui",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}/approve",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "{{penjualan_id}}",
+                    "approve"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 409
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:02:46 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"50-hvjpUTsZBvVUVo2xvPvH79Q2JDk\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::h5wgs-1788775365989-7f5bc967e0cb"
+                },
+                {
+                  "key": "content-length",
+                  "value": "80"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"code\": 409,\n    \"message\": \"Transaksi berstatus \\\"disetujui\\\" tidak bisa di-approve\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "1.5 Kirim Transaksi (disetujui -> dikirim)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Status transaksi = dikirim', function () { pm.expect(data.status).to.eql('dikirim'); });",
+                  "var rels = data.links.map(function (l) { return l.rel; });",
+                  "pm.test('Tidak ada lagi link aksi (approve/cancel/kirim) - state final', function () {",
+                  "  pm.expect(rels).to.not.include.members(['approve', 'cancel', 'kirim']);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}/kirim",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "{{penjualan_id}}",
+                "kirim"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "1.5 Kirim Transaksi (disetujui -> dikirim)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}/kirim",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "{{penjualan_id}}",
+                    "kirim"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:03:38 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"196-+cntFPLP5z8C7QTb96bXuS/GtFk\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::xf6j8-1788775417550-f03d0d2386a0"
+                },
+                {
+                  "key": "content-length",
+                  "value": "406"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 12,\n    \"pelanggan_id\": 12,\n    \"produk_id\": 12,\n    \"jumlah\": 2,\n    \"tanggal\": \"2026-09-07T00:00:00.000Z\",\n    \"total\": 20000,\n    \"status\": \"dikirim\",\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/penjualan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"pelanggan\",\n            \"href\": \"/api/pelanggan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"produk\",\n            \"href\": \"/api/produk/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "1.6 [Negatif] Cancel Transaksi yang Sudah Dikirim",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409 Conflict (dikirim tidak bisa dibatalkan)', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "{{penjualan_id}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "1.6 [Negatif] Cancel Transaksi yang Sudah Dikirim",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/{{penjualan_id}}/cancel",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "{{penjualan_id}}",
+                    "cancel"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 409
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:03:46 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"4e-BM8pxCs2GoIwaa9cdHhPTuAvFHE\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::bpqkt-1788775425867-88d2b9cacf9d"
+                },
+                {
+                  "key": "content-length",
+                  "value": "78"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"code\": 409,\n    \"message\": \"Transaksi berstatus \\\"dikirim\\\" tidak bisa dibatalkan\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Penjualan - Alur cancel dari pending",
+      "item": [
+        {
+          "name": "2.1 Buat Transaksi Baru #2 (untuk uji cancel)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.collectionVariables.set('penjualan_id_cancel', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"pelanggan_id\": {{pelanggan_id}}, \"produk_id\": {{produk_id}}, \"jumlah\": 1}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/penjualan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "2.1 Buat Transaksi Baru #2 (untuk uji cancel)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"pelanggan_id\": {{pelanggan_id}}, \"produk_id\": {{produk_id}}, \"jumlah\": 1}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 201
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:03:59 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"21e-KKJN0MSCCR3ntMrkvasbs0/glic\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::bpqkt-1788775439020-2df1f2f70ee1"
+                },
+                {
+                  "key": "content-length",
+                  "value": "542"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 13,\n    \"pelanggan_id\": 12,\n    \"produk_id\": 12,\n    \"jumlah\": 1,\n    \"tanggal\": \"2026-09-07T00:00:00.000Z\",\n    \"total\": 10000,\n    \"status\": \"pending\",\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/penjualan/13\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"pelanggan\",\n            \"href\": \"/api/pelanggan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"produk\",\n            \"href\": \"/api/produk/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"approve\",\n            \"href\": \"/api/penjualan/13/approve\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"cancel\",\n            \"href\": \"/api/penjualan/13/cancel\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2.2 Cancel Transaksi #2 Langsung dari Pending",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Status transaksi = dibatalkan', function () { pm.expect(data.status).to.eql('dibatalkan'); });",
+                  "var rels = data.links.map(function (l) { return l.rel; });",
+                  "pm.test('Tidak ada lagi link aksi setelah dibatalkan', function () {",
+                  "  pm.expect(rels).to.not.include.members(['approve', 'cancel', 'kirim']);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/{{penjualan_id_cancel}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "{{penjualan_id_cancel}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "2.2 Cancel Transaksi #2 Langsung dari Pending",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/{{penjualan_id_cancel}}/cancel",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "{{penjualan_id_cancel}}",
+                    "cancel"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:04:13 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"199-kLKzP5u4A11eFeSczQ9+a8boiSY\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::xf6j8-1788775453628-0623c872ae9a"
+                },
+                {
+                  "key": "content-length",
+                  "value": "409"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 13,\n    \"pelanggan_id\": 12,\n    \"produk_id\": 12,\n    \"jumlah\": 1,\n    \"tanggal\": \"2026-09-07T00:00:00.000Z\",\n    \"total\": 10000,\n    \"status\": \"dibatalkan\",\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/penjualan/13\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"pelanggan\",\n            \"href\": \"/api/pelanggan/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"produk\",\n            \"href\": \"/api/produk/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2.3 [Negatif] Kirim Transaksi yang Sudah Dibatalkan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409 Conflict', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/{{penjualan_id_cancel}}/kirim",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "{{penjualan_id_cancel}}",
+                "kirim"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "2.3 [Negatif] Kirim Transaksi yang Sudah Dibatalkan",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/{{penjualan_id_cancel}}/kirim",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "{{penjualan_id_cancel}}",
+                    "kirim"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 409
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:04:21 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"65-Kp9ziIVa/7V1Xc+aHcpUbl6rEwU\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::62r2l-1788775461604-85bf07cee2d7"
+                },
+                {
+                  "key": "content-length",
+                  "value": "101"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"code\": 409,\n    \"message\": \"Transaksi berstatus \\\"dibatalkan\\\" belum bisa dikirim (harus disetujui dulu)\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Produk - Alur restock (habis -> tersedia)",
+      "item": [
+        {
+          "name": "3.1 GET Produk Stok Habis (link restock harus ada, beli tidak)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Stok = 0', function () { pm.expect(data.stok).to.eql(0); });",
+                  "var rels = data.links.map(function (l) { return l.rel; });",
+                  "pm.test('Link restock ada', function () { pm.expect(rels).to.include('restock'); });",
+                  "pm.test('Link beli TIDAK ada (stok habis)', function () { pm.expect(rels).to.not.include('beli'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/produk/{{produk_habis_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "produk",
+                "{{produk_habis_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "3.1 GET Produk Stok Habis (link restock harus ada, beli tidak)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/produk/{{produk_habis_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "produk",
+                    "{{produk_habis_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "age",
+                  "value": "0"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:04:36 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"13a-PY4fWgybvjfTT68reUFcRh/Pwsk\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::jfwsh-1788775476303-ac1c740819da"
+                },
+                {
+                  "key": "content-length",
+                  "value": "314"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 13,\n    \"nama_produk\": \"Produk Habis Level3\",\n    \"kategori\": \"Test\",\n    \"harga\": 15000,\n    \"stok\": 0,\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/produk/13\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"restock\",\n            \"href\": \"/api/produk/13/restock\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "3.2 Restock Produk",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Stok bertambah jadi 10', function () { pm.expect(data.stok).to.eql(10); });",
+                  "var rels = data.links.map(function (l) { return l.rel; });",
+                  "pm.test('Link beli SEKARANG muncul', function () { pm.expect(rels).to.include('beli'); });",
+                  "pm.test('Link restock SUDAH HILANG', function () { pm.expect(rels).to.not.include('restock'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tambah\": 10}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/produk/{{produk_habis_id}}/restock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "produk",
+                "{{produk_habis_id}}",
+                "restock"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "3.2 Restock Produk",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"tambah\": 10}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/produk/{{produk_habis_id}}/restock",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "produk",
+                    "{{produk_habis_id}}",
+                    "restock"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:04:49 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"130-AYayElYYeEFA+QoUBGfMnsw6lUA\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::5l5wf-1788775488663-7ada6bc2091c"
+                },
+                {
+                  "key": "content-length",
+                  "value": "304"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 13,\n    \"nama_produk\": \"Produk Habis Level3\",\n    \"kategori\": \"Test\",\n    \"harga\": 15000,\n    \"stok\": 10,\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/produk/13\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"beli\",\n            \"href\": \"/api/penjualan\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "3.3 GET Produk Stok Tersedia (dari Setup, harus punya link beli)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "var data = pm.response.json();",
+                  "var rels = data.links.map(function (l) { return l.rel; });",
+                  "pm.test('Link beli ada, restock tidak ada', function () {",
+                  "  pm.expect(rels).to.include('beli');",
+                  "  pm.expect(rels).to.not.include('restock');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/produk/{{produk_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "produk",
+                "{{produk_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "3.3 GET Produk Stok Tersedia (dari Setup, harus punya link beli)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/produk/{{produk_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "produk",
+                    "{{produk_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "age",
+                  "value": "0"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:05:00 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"12e-uAdsmzWPRPaYgn4UIOMd2HHoRXk\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::fg9n9-1788775499984-f70336962450"
+                },
+                {
+                  "key": "content-length",
+                  "value": "302"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 12,\n    \"nama_produk\": \"Produk Test Level3\",\n    \"kategori\": \"Test\",\n    \"harga\": 10000,\n    \"stok\": 5,\n    \"links\": [\n        {\n            \"rel\": \"self\",\n            \"href\": \"/api/produk/12\",\n            \"method\": \"GET\"\n        },\n        {\n            \"rel\": \"beli\",\n            \"href\": \"/api/penjualan\",\n            \"method\": \"POST\"\n        },\n        {\n            \"rel\": \"swagger\",\n            \"href\": \"https://open-api-prakwebservice.vercel.app/openapi.yaml\",\n            \"method\": \"GET\"\n        }\n    ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Negatif / Validasi Umum",
+      "item": [
+        {
+          "name": "4.1 GET Transaksi ID Tidak Ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404 Not Found', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/999999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "999999999"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "4.1 GET Transaksi ID Tidak Ada",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/999999999",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "999999999"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 404
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "age",
+                  "value": "0"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:05:12 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"32-uwSz+zvTGK3Uof/lLkdWtGMXNVo\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::w62vs-1788775511919-e9d2dd563951"
+                },
+                {
+                  "key": "content-length",
+                  "value": "50"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"code\": 404,\n    \"message\": \"Transaksi tidak ditemukan\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "4.2 POST Transaksi Tanpa Field Wajib",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/penjualan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "4.2 POST Transaksi Tanpa Field Wajib",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 400
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:05:21 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"5a-0Jrs4YKcTiUq79n8pP1uXvF/INM\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::dkzl9-1788775521841-c1862f669d56"
+                },
+                {
+                  "key": "content-length",
+                  "value": "90"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"code\": 400,\n    \"message\": \"Field \\\"pelanggan_id\\\", \\\"produk_id\\\", dan \\\"jumlah\\\" wajib diisi\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "4.3 Approve Transaksi yang Tidak Ada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404 Not Found', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/penjualan/999999999/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "penjualan",
+                "999999999",
+                "approve"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "4.3 Approve Transaksi yang Tidak Ada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/penjualan/999999999/approve",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "penjualan",
+                    "999999999",
+                    "approve"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 404
+                },
+                {
+                  "key": "access-control-allow-headers",
+                  "value": "Content-Type"
+                },
+                {
+                  "key": "access-control-allow-methods",
+                  "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "cache-control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 07 Sep 2026 10:06:12 GMT"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"32-uwSz+zvTGK3Uof/lLkdWtGMXNVo\""
+                },
+                {
+                  "key": "server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "strict-transport-security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "x-vercel-cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "x-vercel-id",
+                  "value": "sin1::iad1::g5cxc-1788775572014-150cffb78d8a"
+                },
+                {
+                  "key": "content-length",
+                  "value": "50"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"code\": 404,\n    \"message\": \"Transaksi tidak ditemukan\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://open-api-prakwebservice.vercel.app"
+    },
+    {
+      "key": "pelanggan_id",
+      "value": ""
+    },
+    {
+      "key": "produk_id",
+      "value": ""
+    },
+    {
+      "key": "produk_habis_id",
+      "value": ""
+    },
+    {
+      "key": "penjualan_id",
+      "value": ""
+    },
+    {
+      "key": "penjualan_id_cancel",
+      "value": ""
+    }
+  ]
+}
