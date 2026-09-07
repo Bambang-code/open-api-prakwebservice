@@ -1,22 +1,30 @@
 import { sql } from '../../lib/db.js';
 import { applyCors } from '../../lib/cors.js';
+import { penjualanLinks } from '../../lib/links.js';
 
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
 
   if (req.method === 'GET') {
     try {
-      const { pelanggan_id, produk_id, tanggal_mulai, tanggal_akhir } = req.query;
+      const { pelanggan_id, produk_id, tanggal_mulai, tanggal_akhir, status } = req.query;
       let rows = await sql`
-        SELECT id, pelanggan_id, produk_id, jumlah, tanggal, total::float8 AS total
+        SELECT id, pelanggan_id, produk_id, jumlah, tanggal, total::float8 AS total, status
         FROM penjualan
         WHERE (${pelanggan_id ?? null}::int IS NULL OR pelanggan_id = ${pelanggan_id ?? null}::int)
           AND (${produk_id ?? null}::int IS NULL OR produk_id = ${produk_id ?? null}::int)
           AND (${tanggal_mulai ?? null}::date IS NULL OR tanggal >= ${tanggal_mulai ?? null}::date)
           AND (${tanggal_akhir ?? null}::date IS NULL OR tanggal <= ${tanggal_akhir ?? null}::date)
+          AND (${status ?? null}::varchar IS NULL OR status = ${status ?? null}::varchar)
         ORDER BY id
       `;
-      return res.status(200).json(rows);
+      // Koleksi (list) tetap "ringan" ala Level 2 — cukup selipkan link "self"
+      // per item supaya klien tahu ke mana harus GET untuk detail + aksi lengkap.
+      const data = rows.map((row) => ({
+        ...row,
+        links: [{ rel: 'self', href: `/api/penjualan/${row.id}`, method: 'GET' }],
+      }));
+      return res.status(200).json(data);
     } catch (err) {
       return res.status(500).json({ code: 500, message: err.message });
     }
@@ -44,17 +52,18 @@ export default async function handler(req, res) {
       const totalAkhir = total ?? produk.harga * jumlah;
 
       const [row] = await sql`
-        INSERT INTO penjualan (pelanggan_id, produk_id, jumlah, tanggal, total)
+        INSERT INTO penjualan (pelanggan_id, produk_id, jumlah, tanggal, total, status)
         VALUES (
           ${pelanggan_id},
           ${produk_id},
           ${jumlah},
           ${tanggal ?? new Date().toISOString().slice(0, 10)},
-          ${totalAkhir}
+          ${totalAkhir},
+          'pending'
         )
-        RETURNING id, pelanggan_id, produk_id, jumlah, tanggal, total::float8 AS total
+        RETURNING id, pelanggan_id, produk_id, jumlah, tanggal, total::float8 AS total, status
       `;
-      return res.status(201).json(row);
+      return res.status(201).json({ ...row, links: penjualanLinks(req, row) });
     } catch (err) {
       return res.status(500).json({ code: 500, message: err.message });
     }

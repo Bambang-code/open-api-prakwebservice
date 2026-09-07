@@ -70,6 +70,29 @@ cp .env.example .env   # isi DATABASE_URL punyamu
 vercel dev
 ```
 
+## RMM Level 3 (HATEOAS)
+
+Dari 3 resource yang ada, 2 di antaranya sudah dinaikkan ke **RMM Level 3**
+karena punya state/transisi yang jelas (bukan sekadar CRUD data statis
+seperti `pelanggan`):
+
+- **`penjualan` (transaksi)** — state machine: `pending -> disetujui -> dikirim`,
+  atau `dibatalkan`. Endpoint baru: `POST /api/penjualan/:id/approve`,
+  `POST /api/penjualan/:id/cancel`, `POST /api/penjualan/:id/kirim`.
+- **`produk`** — state berdasarkan `stok`: `tersedia` vs `habis`. Endpoint baru:
+  `POST /api/produk/:id/restock`.
+
+Response `GET`/`POST`/`PUT` pada kedua resource itu sekarang menyertakan array
+`links` (`rel`, `href`, `method`) yang isinya menyesuaikan status saat ini —
+lihat `lib/links.js`. Setiap response juga punya `rel: "swagger"` yang mengarah
+ke `/openapi.yaml` (kontrak API, di-serve statis oleh Vercel dari root project).
+
+`pelanggan` sengaja tetap di **Level 2** — cuma daftar data (nama, email, dst)
+tanpa transisi state, jadi HATEOAS tidak menambah nilai di sana.
+
+> Sebelum deploy ulang, jalankan `migration_add_status.sql` di Neon (SQL editor)
+> untuk menambah kolom `status` pada tabel `penjualan` yang sudah ada.
+
 ## Catatan implementasi
 - Endpoint `POST /api/penjualan` otomatis menghitung `total` (harga produk x jumlah)
   kalau field `total` tidak dikirim, dan memvalidasi `pelanggan_id`/`produk_id` benar-benar ada.

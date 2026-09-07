@@ -1,5 +1,6 @@
 import { sql } from "../../lib/db.js";
 import { applyCors } from "../../lib/cors.js";
+import { penjualanLinks } from "../../lib/links.js";
 
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
@@ -8,20 +9,23 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       const [row] = await sql`
-        SELECT id, pelanggan_id, produk_id, jumlah, tanggal, total::float8 AS total
+        SELECT id, pelanggan_id, produk_id, jumlah, tanggal, total::float8 AS total, status
         FROM penjualan WHERE id = ${id}
       `;
       if (!row)
         return res
           .status(404)
           .json({ code: 404, message: "Transaksi tidak ditemukan" });
-      return res.status(200).json(row);
+      return res.status(200).json({ ...row, links: penjualanLinks(req, row) });
     } catch (err) {
       return res.status(500).json({ code: 500, message: err.message });
     }
   }
 
   if (req.method === "PUT") {
+    // PUT hanya mengubah data transaksi (pelanggan/produk/jumlah/tanggal/total).
+    // Perubahan status HARUS lewat endpoint aksi (approve/cancel/kirim) supaya
+    // aturan transisi state tetap konsisten dan sesuai dengan link yang ditawarkan.
     const { pelanggan_id, produk_id, jumlah, tanggal, total } = req.body ?? {};
     if (!pelanggan_id || !produk_id || !jumlah) {
       return res.status(400).json({
@@ -45,7 +49,6 @@ export default async function handler(req, res) {
           .json({ code: 404, message: "produk_id tidak ditemukan" });
       }
 
-      // Kalau "total" tidak dikirim, hitung otomatis dari harga produk x jumlah (sama seperti POST).
       const totalAkhir = total ?? produk.harga * jumlah;
 
       const [row] = await sql`
@@ -53,13 +56,13 @@ export default async function handler(req, res) {
         SET pelanggan_id = ${pelanggan_id}, produk_id = ${produk_id}, jumlah = ${jumlah},
             tanggal = ${tanggal ?? new Date().toISOString().slice(0, 10)}, total = ${totalAkhir}
         WHERE id = ${id}
-        RETURNING id, pelanggan_id, produk_id, jumlah, tanggal, total::float8 AS total
+        RETURNING id, pelanggan_id, produk_id, jumlah, tanggal, total::float8 AS total, status
       `;
       if (!row)
         return res
           .status(404)
           .json({ code: 404, message: "Transaksi tidak ditemukan" });
-      return res.status(200).json(row);
+      return res.status(200).json({ ...row, links: penjualanLinks(req, row) });
     } catch (err) {
       return res.status(500).json({ code: 500, message: err.message });
     }

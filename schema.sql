@@ -21,5 +21,8 @@ CREATE TABLE penjualan (
     produk_id INT REFERENCES produk(id),
     jumlah INT NOT NULL,
     tanggal DATE DEFAULT CURRENT_DATE,
-    total NUMERIC(14,2)
+    total NUMERIC(14,2),
+    -- Ditambahkan untuk mendukung RMM Level 3 (HATEOAS) pada endpoint /api/penjualan:
+    -- lihat migration_add_status.sql untuk ALTER TABLE di database yang sudah berjalan.
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
 );
